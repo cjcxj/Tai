@@ -88,6 +88,8 @@ namespace UI.Controls.Charts
         #endregion
         //private TextBlock NameTextObj, ValueTextObj;
         private Rectangle ValueBlockObj;
+        private TextBlock DayTextObj;
+        private TextBlock TimeTextObj;
         //private StackPanel ValueContainer;
         //private Image IconObj;
         private bool isRendering = false;
@@ -112,6 +114,8 @@ namespace UI.Controls.Charts
             //NameTextObj = GetTemplateChild("NameTextObj") as TextBlock;
             //ValueTextObj = GetTemplateChild("ValueTextObj") as TextBlock;
             ValueBlockObj = GetTemplateChild("ValueBlockObj") as Rectangle;
+            DayTextObj = GetTemplateChild("DayTextObj") as TextBlock;
+            TimeTextObj = GetTemplateChild("TimeTextObj") as TextBlock;
             //ValueContainer = GetTemplateChild("ValueContainer") as StackPanel;
 
             //IconObj = GetTemplateChild("IconObj") as Image;
@@ -143,6 +147,14 @@ namespace UI.Controls.Charts
             if (size > 0 && size < 8) //防止历史数值太小界面无显示效果
                 size = 8;
             ValueBlockObj.Width = ValueBlockObj.Height = size;
+            if (DayTextObj != null)
+            {
+                DayTextObj.Text = Data.DateTime.Day.ToString();
+            }
+            if (TimeTextObj != null)
+            {
+                TimeTextObj.Text = Data.Value > 0 ? FormatShortTime((int)Data.Value) : "";
+            }
             ToolTip = Data.DateTime.ToString("yyyy年MM月dd日") + " " + (string.IsNullOrEmpty(Data.Tag) ? "无数据" : Data.Tag);
 
             if (Data.DateTime.Date == DateTime.Now.Date)
@@ -171,6 +183,22 @@ namespace UI.Controls.Charts
             //    //}
             //    ValueBlockObj.Width = ValueBlockObj.Height = (Data.Value / MaxValue) * ActualWidth;
             //};
+        }
+
+        /// <summary>
+        /// 短格式时长
+        /// </summary>
+        private string FormatShortTime(int seconds)
+        {
+            if (seconds >= 3600)
+            {
+                return (seconds / 3600.0).ToString("0.0") + "小时";
+            }
+            if (seconds >= 60)
+            {
+                return (seconds / 60) + "分";
+            }
+            return seconds + "秒";
         }
     }
 }

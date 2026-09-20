@@ -961,9 +961,14 @@ namespace UI.Controls.Charts
                 });
             }
 
-            //  填充空数据
+            //  填充空数据（有数据的日子由有效数据项渲染，避免重复）
+            var validDays = data.Select(m => m.DateTime.Day).Distinct().ToList();
             for (int i = 0; i < days; i++)
             {
+                if (validDays.Contains(i + 1))
+                {
+                    continue;
+                }
                 var date = new DateTime(month.Year, month.Month, i + 1);
                 var chartsItem = new ChartsItemTypeMonth();
                 chartsItem.Data = new ChartsDataModel()

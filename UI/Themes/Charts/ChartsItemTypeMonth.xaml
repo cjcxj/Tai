@@ -7,7 +7,7 @@
           Value="true" />
 
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Margin" Value="5"/>
+        <Setter Property="Margin" Value="2"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
 
@@ -15,12 +15,13 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type local:ChartsItemTypeMonth}">
                     <Grid >
-                        <Grid x:Name="Normal">
+                        <StackPanel x:Name="Normal">
+                            <TextBlock x:Name="DayTextObj" FontSize="12" Foreground="{DynamicResource DefaultTextBrush}" HorizontalAlignment="Center" Margin="0,0,0,2"/>
                             <Border>
                                 <!--<Border.Effect>
                                 <DropShadowEffect BlurRadius="14" ShadowDepth="0" Direction="0" Opacity="0.05"/>
                             </Border.Effect>-->
-                                <Border x:Name="Border" Margin="0" Background="{DynamicResource ChartMonthGridItemBgBrush}"  CornerRadius="4"  Width="20" Height="20" BorderThickness="0" BorderBrush="{DynamicResource ThemeBrush}">
+                                <Border x:Name="Border" Margin="0" Background="{DynamicResource ChartMonthGridItemBgBrush}"  CornerRadius="4"  Width="20" Height="20" BorderThickness="0" BorderBrush="{DynamicResource ThemeBrush}" HorizontalAlignment="Center">
 
                                     <Border.Clip>
                                         <RectangleGeometry RadiusX="4" RadiusY="4" Rect="0,0,20,20"/>
@@ -49,8 +50,8 @@
 
                                 </Border>
                             </Border>
-
-                        </Grid>
+                            <TextBlock x:Name="TimeTextObj" FontSize="9" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                        </StackPanel>
 
                         <Grid x:Name="Loading" Visibility="Collapsed">
                             <base:Placeholder CornerRadius="12"  Width="150" Height="150"/>
