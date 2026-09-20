@@ -3,8 +3,12 @@ name: build
 on:
   push:
     branches: [master]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -34,3 +38,12 @@ jobs:
             Core/bin/Release/
             Updater/bin/Release/
           if-no-files-found: ignore
+
+      - name: Package and publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          Compress-Archive -Path UI/bin/Release/* -DestinationPath "Tai-${{ github.ref_name }}-portable.zip"
+          gh release create "${{ github.ref_name }}" "Tai-${{ github.ref_name }}-portable.zip" --title "Tai ${{ github.ref_name }}" --generate-notes
