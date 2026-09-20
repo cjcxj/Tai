@@ -24,8 +24,6 @@ namespace UI.ViewModels
         public Command ToDetailCommand { get; set; }
         public Command SetCalendarMonthCommand { get; set; }
         public Command SetCalendarTodayCommand { get; set; }
-        public Command SetAppCalendarMonthCommand { get; set; }
-        public Command SelectAppCommand { get; set; }
 
         private readonly IData data;
         private readonly MainViewModel main;
@@ -46,8 +44,6 @@ namespace UI.ViewModels
             ToDetailCommand = new Command(new Action<object>(OnTodetailCommand));
             SetCalendarMonthCommand = new Command(new Action<object>(OnSetCalendarMonthCommand));
             SetCalendarTodayCommand = new Command(new Action<object>(obj => SetCalendarToday()));
-            SetAppCalendarMonthCommand = new Command(new Action<object>(OnSetAppCalendarMonthCommand));
-            SelectAppCommand = new Command(new Action<object>(OnSelectAppCommand));
 
             Init();
         }
@@ -65,7 +61,7 @@ namespace UI.ViewModels
 
             TabbarData = new System.Collections.ObjectModel.ObservableCollection<string>()
             {
-                "按天","按月","按年","按应用"
+                "按天","按月","按年"
             };
 
             TabbarSelectedIndex = 0;
@@ -134,13 +130,6 @@ namespace UI.ViewModels
                         YearDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
                     }
                 }
-                else if (TabbarSelectedIndex == 3)
-                {
-                    if (!appTabInited)
-                    {
-                        InitAppTab();
-                    }
-                }
             }
             else if (e.PropertyName == nameof(SelectedCalendarDay))
             {
@@ -160,23 +149,6 @@ namespace UI.ViewModels
                 {
                     DayDate = day.Date;
                 }
-            }
-            else if (e.PropertyName == nameof(SelectedAppCalendarDay))
-            {
-                var day = SelectedAppCalendarDay;
-                if (day == null || !day.CanSelect)
-                {
-                    return;
-                }
-                if (AppCalendarDays != null)
-                {
-                    foreach (var item in AppCalendarDays)
-                    {
-                        item.IsSelected = ReferenceEquals(item, day);
-                    }
-                }
-                appSelectedDate = day.Date;
-                LoadAppHourData(day.Date);
             }
             else if (e.PropertyName == nameof(ShowType))
             {
@@ -334,137 +306,6 @@ namespace UI.ViewModels
             }
             return seconds + "秒";
         }
-
-        #region 按应用查看
-
-        private AppModel selectedApp;
-        private DateTime appCalendarMonth;
-        private DateTime appSelectedDate;
-        private bool appTabInited;
-
-        private void InitAppTab()
-        {
-            appTabInited = true;
-            appCalendarMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-            appSelectedDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
-            AppCalendarMonthStr = appCalendarMonth.ToString("yyyy年MM月");
-            LoadMonthAppList();
-            LoadAppCalendarDays();
-        }
-
-        private void OnSetAppCalendarMonthCommand(object obj)
-        {
-            int offset = int.Parse(obj.ToString());
-            var newMonth = appCalendarMonth.AddMonths(offset);
-            var now = DateTime.Now;
-            if (newMonth > new DateTime(now.Year, now.Month, 1) || newMonth < new DateTime(2020, 1, 1))
-            {
-                return;
-            }
-            appCalendarMonth = newMonth;
-            AppCalendarMonthStr = newMonth.ToString("yyyy年MM月");
-            LoadMonthAppList();
-            LoadAppCalendarDays();
-        }
-
-        /// <summary>
-        /// 点选应用列表切换当前应用
-        /// </summary>
-        private void OnSelectAppCommand(object obj)
-        {
-            var model = obj as ChartsDataModel;
-            var app = (model?.Data as DailyLogModel)?.AppModel;
-            if (app == null)
-            {
-                return;
-            }
-            selectedApp = app;
-            SelectedAppName = !string.IsNullOrEmpty(app.Alias) ? app.Alias : (string.IsNullOrEmpty(app.Description) ? app.Name : app.Description);
-            SelectedAppIcon = app.IconFile;
-            LoadAppCalendarDays();
-        }
-
-        /// <summary>
-        /// 加载当月应用时长列表
-        /// </summary>
-        private async void LoadMonthAppList()
-        {
-            var start = appCalendarMonth;
-            var end = start.AddMonths(1).AddDays(-1);
-            List<ChartsDataModel> list = null;
-            await Task.Run(() =>
-            {
-                list = MapToChartsData(data.GetDateRangelogList(start, end));
-            });
-            MonthAppList = list;
-        }
-
-        /// <summary>
-        /// 加载已选应用当月日历数据
-        /// </summary>
-        private async void LoadAppCalendarDays()
-        {
-            var month = appCalendarMonth;
-            var app = selectedApp;
-            List<CalendarDayModel> list = null;
-            await Task.Run(() =>
-            {
-                Dictionary<int, int> dayTotals = null;
-                if (app != null)
-                {
-                    dayTotals = new Dictionary<int, int>();
-                    var logs = data.GetProcessMonthLogList(app.ID, month);
-                    foreach (var log in logs)
-                    {
-                        if (log.Date.Year == month.Year && log.Date.Month == month.Month)
-                        {
-                            dayTotals[log.Date.Day] = dayTotals.ContainsKey(log.Date.Day) ? dayTotals[log.Date.Day] + log.Time : log.Time;
-                        }
-                    }
-                }
-                list = BuildCalendarCells(month, dayTotals, app != null);
-            });
-
-            AppCalendarDays = list;
-
-            var dayNum = appSelectedDate != DateTime.MinValue ? appSelectedDate.Day : DateTime.Now.Day;
-            var selected = list.Where(m => m.CanSelect && m.DayNum == dayNum).FirstOrDefault();
-            if (selected != null)
-            {
-                selected.IsSelected = true;
-            }
-            SelectedAppCalendarDay = selected;
-        }
-
-        /// <summary>
-        /// 加载已选应用当日时段数据
-        /// </summary>
-        private async void LoadAppHourData(DateTime date)
-        {
-            var app = selectedApp;
-            if (app == null)
-            {
-                return;
-            }
-            AppDataMaximum = 3600;
-            await Task.Run(() =>
-            {
-                var list = data.GetAppDayData(app.ID, date);
-                var chartData = new List<ChartsDataModel>();
-                foreach (var item in list)
-                {
-                    chartData.Add(new ChartsDataModel()
-                    {
-                        Name = SelectedAppName,
-                        Icon = app.IconFile,
-                        Values = item.Values,
-                    });
-                }
-                AppHourChartData = chartData;
-            });
-        }
-
-        #endregion
 
         #endregion
 
