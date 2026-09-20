@@ -128,5 +128,85 @@ namespace UI.Models
             get { return SelectedCalendarDay_; }
             set { SelectedCalendarDay_ = value; OnPropertyChanged(); }
         }
+
+        private List<CalendarDayModel> AppCalendarDays_;
+        /// <summary>
+        /// 按应用日历单元格数据
+        /// </summary>
+        public List<CalendarDayModel> AppCalendarDays
+        {
+            get { return AppCalendarDays_; }
+            set { AppCalendarDays_ = value; OnPropertyChanged(); }
+        }
+
+        private string AppCalendarMonthStr_;
+        /// <summary>
+        /// 按应用日历当前月份文本
+        /// </summary>
+        public string AppCalendarMonthStr
+        {
+            get { return AppCalendarMonthStr_; }
+            set { AppCalendarMonthStr_ = value; OnPropertyChanged(); }
+        }
+
+        private CalendarDayModel SelectedAppCalendarDay_;
+        /// <summary>
+        /// 按应用日历选中日期
+        /// </summary>
+        public CalendarDayModel SelectedAppCalendarDay
+        {
+            get { return SelectedAppCalendarDay_; }
+            set { SelectedAppCalendarDay_ = value; OnPropertyChanged(); }
+        }
+
+        private string SelectedAppName_ = "选择应用查看其每日使用时长";
+        /// <summary>
+        /// 已选应用名称
+        /// </summary>
+        public string SelectedAppName
+        {
+            get { return SelectedAppName_; }
+            set { SelectedAppName_ = value; OnPropertyChanged(); }
+        }
+
+        private string SelectedAppIcon_ = "pack://application:,,,/Tai;component/Resources/Icons/defaultIcon.png";
+        /// <summary>
+        /// 已选应用图标
+        /// </summary>
+        public string SelectedAppIcon
+        {
+            get { return SelectedAppIcon_; }
+            set { SelectedAppIcon_ = value; OnPropertyChanged(); }
+        }
+
+        private List<ChartsDataModel> MonthAppList_;
+        /// <summary>
+        /// 当月应用时长列表
+        /// </summary>
+        public List<ChartsDataModel> MonthAppList
+        {
+            get { return MonthAppList_; }
+            set { MonthAppList_ = value; OnPropertyChanged(); }
+        }
+
+        private List<ChartsDataModel> AppHourChartData_;
+        /// <summary>
+        /// 已选应用当日时段图表数据
+        /// </summary>
+        public List<ChartsDataModel> AppHourChartData
+        {
+            get { return AppHourChartData_; }
+            set { AppHourChartData_ = value; OnPropertyChanged(); }
+        }
+
+        private double AppDataMaximum_ = 3600;
+        /// <summary>
+        /// 时段图表最大值
+        /// </summary>
+        public double AppDataMaximum
+        {
+            get { return AppDataMaximum_; }
+            set { AppDataMaximum_ = value; OnPropertyChanged(); }
+        }
     }
 }

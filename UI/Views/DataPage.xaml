@@ -21,7 +21,7 @@
             <TextBlock Text="详细" FontSize="18" VerticalAlignment="Center"/>
             <select:Select Margin="10,0,0,0" VerticalAlignment="Top" Padding="10,5"  IsShowIcon="False" SelectedItem="{Binding ShowType,Mode=TwoWay}" Options="{Binding ShowTypeOptions}"/>
         </StackPanel>
-        <Tabbar:Tabbar Width="145" HorizontalAlignment="Left" Grid.Row="1" Data="{Binding TabbarData}" SelectedIndex="{Binding TabbarSelectedIndex,Mode=TwoWay}"/>
+        <Tabbar:Tabbar Width="190" HorizontalAlignment="Left" Grid.Row="1" Data="{Binding TabbarData}" SelectedIndex="{Binding TabbarSelectedIndex,Mode=TwoWay}"/>
 
 
         <TabControl 
@@ -139,6 +139,99 @@
                     <select:DateSelect Date="{Binding YearDate,Mode=TwoWay}" SelectType="Year"/>
 
                     <Charts:Charts IsShowBadge="True" IsSearch="True" Grid.Row="1" ItemMenu="{Binding AppContextMenu}" Data="{Binding YearData}" ChartsType="List" Margin="0,20,0,0" ClickCommand="{Binding ToDetailCommand}"/>
+                </Grid>
+            </TabItem>
+            <TabItem>
+                <Grid Margin="0,20,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="*"/>
+
+                    </Grid.ColumnDefinitions>
+                    <Border Background="{DynamicResource SettingPanelBgBrush}" CornerRadius="10" Padding="12" Width="300" VerticalAlignment="Top">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6" ToolTip="点右侧列表选择应用">
+                                <base:Img URL="{Binding SelectedAppIcon}" Width="20" Height="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding SelectedAppName}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource DefaultTextBrush}" VerticalAlignment="Center" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" MaxWidth="220"/>
+                            </StackPanel>
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="auto"/>
+
+                                </Grid.ColumnDefinitions>
+                                <Button Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6,0" Command="{Binding SetAppCalendarMonthCommand}" CommandParameter="-1" ToolTip="上个月">
+                                    <base:Icon IconType="ChevronLeftMed" FontSize="12" Foreground="{DynamicResource SubTextBrush}"/>
+                                </Button>
+                                <TextBlock Grid.Column="1" Text="{Binding AppCalendarMonthStr}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource DefaultTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Button Grid.Column="2" Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6,0" Command="{Binding SetAppCalendarMonthCommand}" CommandParameter="1" ToolTip="下个月">
+                                    <base:Icon IconType="ChevronRightMed" FontSize="12" Foreground="{DynamicResource SubTextBrush}"/>
+                                </Button>
+                            </Grid>
+                            <UniformGrid Columns="7" Margin="0,0,0,4">
+                                <TextBlock Text="一" FontSize="11" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="二" FontSize="11" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="三" FontSize="11" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="四" FontSize="11" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="五" FontSize="11" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="六" FontSize="11" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="日" FontSize="11" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                            </UniformGrid>
+                            <ListBox ItemsSource="{Binding AppCalendarDays}" SelectedItem="{Binding SelectedAppCalendarDay,Mode=TwoWay}" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="7"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <ContentPresenter/>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Height="42" Margin="2" ToolTip="{Binding ToolTipText}" Opacity="{Binding CellOpacity}" IsHitTestVisible="{Binding CanSelect}">
+                                            <Border Background="{DynamicResource ThemeBrush}" CornerRadius="6" Opacity="{Binding Heat}"/>
+                                            <Border BorderBrush="{DynamicResource ThemeBrush}" BorderThickness="1.5" CornerRadius="6" Visibility="{Binding SelectedBorderVisibility}"/>
+                                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding DayNum}" FontSize="12" FontWeight="{Binding DayWeight}" Foreground="{DynamicResource DefaultTextBrush}" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding TimeText}" FontSize="9" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Column="1" Margin="20,0,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="*"/>
+
+                        </Grid.RowDefinitions>
+                        <Border Background="{DynamicResource SettingPanelBgBrush}" CornerRadius="10" Padding="15" Height="240">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="*"/>
+
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="当日时段（小时）" FontSize="14" Foreground="{DynamicResource SubTextBrush}"/>
+                                <Charts:Charts Grid.Row="1" IsShowCategory="False" ChartsType="Column" DataMaximum="{Binding AppDataMaximum}" Data="{Binding AppHourChartData}" Margin="0,10,0,0"/>
+                            </Grid>
+                        </Border>
+                        <Charts:Charts Grid.Row="1" IsShowBadge="True" IsSearch="True" ChartsType="List" Data="{Binding MonthAppList}" ClickCommand="{Binding SelectAppCommand}" Margin="0,20,0,0" ToolTip="点击应用，左侧日历显示该应用每日使用时长"/>
+                    </Grid>
                 </Grid>
             </TabItem>
         </TabControl>

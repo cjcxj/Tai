@@ -24,6 +24,8 @@ namespace UI.ViewModels
         public Command ToDetailCommand { get; set; }
         public Command SetCalendarMonthCommand { get; set; }
         public Command SetCalendarTodayCommand { get; set; }
+        public Command SetAppCalendarMonthCommand { get; set; }
+        public Command SelectAppCommand { get; set; }
 
         private readonly IData data;
         private readonly MainViewModel main;
@@ -44,6 +46,8 @@ namespace UI.ViewModels
             ToDetailCommand = new Command(new Action<object>(OnTodetailCommand));
             SetCalendarMonthCommand = new Command(new Action<object>(OnSetCalendarMonthCommand));
             SetCalendarTodayCommand = new Command(new Action<object>(obj => SetCalendarToday()));
+            SetAppCalendarMonthCommand = new Command(new Action<object>(OnSetAppCalendarMonthCommand));
+            SelectAppCommand = new Command(new Action<object>(OnSelectAppCommand));
 
             Init();
         }
@@ -61,7 +65,7 @@ namespace UI.ViewModels
 
             TabbarData = new System.Collections.ObjectModel.ObservableCollection<string>()
             {
-                "按天","按月","按年"
+                "按天","按月","按年","按应用"
             };
 
             TabbarSelectedIndex = 0;
@@ -130,6 +134,13 @@ namespace UI.ViewModels
                         YearDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
                     }
                 }
+                else if (TabbarSelectedIndex == 3)
+                {
+                    if (!appTabInited)
+                    {
+                        InitAppTab();
+                    }
+                }
             }
             else if (e.PropertyName == nameof(SelectedCalendarDay))
             {
@@ -149,6 +160,23 @@ namespace UI.ViewModels
                 {
                     DayDate = day.Date;
                 }
+            }
+            else if (e.PropertyName == nameof(SelectedAppCalendarDay))
+            {
+                var day = SelectedAppCalendarDay;
+                if (day == null || !day.CanSelect)
+                {
+                    return;
+                }
+                if (AppCalendarDays != null)
+                {
+                    foreach (var item in AppCalendarDays)
+                    {
+                        item.IsSelected = ReferenceEquals(item, day);
+                    }
+                }
+                appSelectedDate = day.Date;
+                LoadAppHourData(day.Date);
             }
             else if (e.PropertyName == nameof(ShowType))
             {
@@ -219,49 +247,18 @@ namespace UI.ViewModels
 
             await Task.Run(() =>
             {
-                var start = month;
-                var end = month.AddMonths(1).AddDays(-1);
-
-                double[] totals = null;
+                Dictionary<int, int> dayTotals = null;
                 if (isApp)
                 {
-                    totals = data.GetRangeTotalData(start, end);
-                }
-                double max = totals != null && totals.Length > 0 ? totals.Max() : 0;
-
-                int days = DateTime.DaysInMonth(month.Year, month.Month);
-                //周一为首列
-                int prePad = ((int)start.DayOfWeek + 6) % 7;
-                var today = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
-
-                list = new List<CalendarDayModel>();
-                for (int i = prePad; i > 0; i--)
-                {
-                    list.Add(new CalendarDayModel()
+                    var totals = data.GetRangeTotalData(month, month.AddMonths(1).AddDays(-1));
+                    dayTotals = new Dictionary<int, int>();
+                    int days = DateTime.DaysInMonth(month.Year, month.Month);
+                    for (int i = 0; i < totals.Length && i < days; i++)
                     {
-                        Date = start.AddDays(-i),
-                        IsOtherMonth = true,
-                        CellOpacity = .3,
-                    });
+                        dayTotals[i + 1] = (int)totals[i];
+                    }
                 }
-
-                for (int i = 0; i < days; i++)
-                {
-                    var date = start.AddDays(i);
-                    int total = totals != null && i < totals.Length ? (int)totals[i] : 0;
-                    var isFuture = date > today;
-
-                    list.Add(new CalendarDayModel()
-                    {
-                        Date = date,
-                        IsToday = date == today,
-                        IsFuture = isFuture,
-                        CellOpacity = isFuture ? .3 : 1,
-                        TimeText = isApp && total > 0 ? FormatDayTime(total) : "",
-                        Heat = isApp && max > 0 && total > 0 ? Math.Min(.85, .15 + total / max * .7) : 0,
-                        ToolTipText = date.ToString("yyyy年MM月dd日") + (isApp ? (total > 0 ? "\r\n使用时长：" + Time.ToString(total) : "\r\n无使用数据") : ""),
-                    });
-                }
+                list = BuildCalendarCells(month, dayTotals, isApp);
             });
 
             CalendarDays = list;
@@ -274,6 +271,52 @@ namespace UI.ViewModels
                 selected.IsSelected = true;
             }
             SelectedCalendarDay = selected;
+        }
+
+        /// <summary>
+        /// 生成日历单元格数据
+        /// </summary>
+        /// <param name="month">月份</param>
+        /// <param name="dayTotals">按日汇总时长（key=日）</param>
+        /// <param name="showTime">是否显示时长</param>
+        private List<CalendarDayModel> BuildCalendarCells(DateTime month, Dictionary<int, int> dayTotals, bool showTime)
+        {
+            int days = DateTime.DaysInMonth(month.Year, month.Month);
+            //周一为首列
+            int prePad = ((int)month.DayOfWeek + 6) % 7;
+            var today = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+            int max = dayTotals != null && dayTotals.Count > 0 ? dayTotals.Values.Max() : 0;
+
+            var list = new List<CalendarDayModel>();
+            for (int i = prePad; i > 0; i--)
+            {
+                list.Add(new CalendarDayModel()
+                {
+                    Date = month.AddDays(-i),
+                    IsOtherMonth = true,
+                    CellOpacity = .3,
+                });
+            }
+
+            for (int i = 0; i < days; i++)
+            {
+                var date = month.AddDays(i);
+                int total = dayTotals != null && dayTotals.ContainsKey(date.Day) ? dayTotals[date.Day] : 0;
+                var isFuture = date > today;
+
+                list.Add(new CalendarDayModel()
+                {
+                    Date = date,
+                    IsToday = date == today,
+                    IsFuture = isFuture,
+                    CellOpacity = isFuture ? .3 : 1,
+                    TimeText = showTime && total > 0 ? FormatDayTime(total) : "",
+                    Heat = showTime && max > 0 && total > 0 ? Math.Min(.85, .15 + total / max * .7) : 0,
+                    ToolTipText = date.ToString("yyyy年MM月dd日") + (showTime ? (total > 0 ? "\r\n使用时长：" + Time.ToString(total) : "\r\n无使用数据") : ""),
+                });
+            }
+
+            return list;
         }
 
         /// <summary>
@@ -291,6 +334,137 @@ namespace UI.ViewModels
             }
             return seconds + "秒";
         }
+
+        #region 按应用查看
+
+        private AppModel selectedApp;
+        private DateTime appCalendarMonth;
+        private DateTime appSelectedDate;
+        private bool appTabInited;
+
+        private void InitAppTab()
+        {
+            appTabInited = true;
+            appCalendarMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            appSelectedDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+            AppCalendarMonthStr = appCalendarMonth.ToString("yyyy年MM月");
+            LoadMonthAppList();
+            LoadAppCalendarDays();
+        }
+
+        private void OnSetAppCalendarMonthCommand(object obj)
+        {
+            int offset = int.Parse(obj.ToString());
+            var newMonth = appCalendarMonth.AddMonths(offset);
+            var now = DateTime.Now;
+            if (newMonth > new DateTime(now.Year, now.Month, 1) || newMonth < new DateTime(2020, 1, 1))
+            {
+                return;
+            }
+            appCalendarMonth = newMonth;
+            AppCalendarMonthStr = newMonth.ToString("yyyy年MM月");
+            LoadMonthAppList();
+            LoadAppCalendarDays();
+        }
+
+        /// <summary>
+        /// 点选应用列表切换当前应用
+        /// </summary>
+        private void OnSelectAppCommand(object obj)
+        {
+            var model = obj as ChartsDataModel;
+            var app = (model?.Data as DailyLogModel)?.AppModel;
+            if (app == null)
+            {
+                return;
+            }
+            selectedApp = app;
+            SelectedAppName = !string.IsNullOrEmpty(app.Alias) ? app.Alias : (string.IsNullOrEmpty(app.Description) ? app.Name : app.Description);
+            SelectedAppIcon = app.IconFile;
+            LoadAppCalendarDays();
+        }
+
+        /// <summary>
+        /// 加载当月应用时长列表
+        /// </summary>
+        private async void LoadMonthAppList()
+        {
+            var start = appCalendarMonth;
+            var end = start.AddMonths(1).AddDays(-1);
+            List<ChartsDataModel> list = null;
+            await Task.Run(() =>
+            {
+                list = MapToChartsData(data.GetDateRangelogList(start, end));
+            });
+            MonthAppList = list;
+        }
+
+        /// <summary>
+        /// 加载已选应用当月日历数据
+        /// </summary>
+        private async void LoadAppCalendarDays()
+        {
+            var month = appCalendarMonth;
+            var app = selectedApp;
+            List<CalendarDayModel> list = null;
+            await Task.Run(() =>
+            {
+                Dictionary<int, int> dayTotals = null;
+                if (app != null)
+                {
+                    dayTotals = new Dictionary<int, int>();
+                    var logs = data.GetProcessMonthLogList(app.ID, month);
+                    foreach (var log in logs)
+                    {
+                        if (log.Date.Year == month.Year && log.Date.Month == month.Month)
+                        {
+                            dayTotals[log.Date.Day] = dayTotals.ContainsKey(log.Date.Day) ? dayTotals[log.Date.Day] + log.Time : log.Time;
+                        }
+                    }
+                }
+                list = BuildCalendarCells(month, dayTotals, app != null);
+            });
+
+            AppCalendarDays = list;
+
+            var dayNum = appSelectedDate != DateTime.MinValue ? appSelectedDate.Day : DateTime.Now.Day;
+            var selected = list.Where(m => m.CanSelect && m.DayNum == dayNum).FirstOrDefault();
+            if (selected != null)
+            {
+                selected.IsSelected = true;
+            }
+            SelectedAppCalendarDay = selected;
+        }
+
+        /// <summary>
+        /// 加载已选应用当日时段数据
+        /// </summary>
+        private async void LoadAppHourData(DateTime date)
+        {
+            var app = selectedApp;
+            if (app == null)
+            {
+                return;
+            }
+            AppDataMaximum = 3600;
+            await Task.Run(() =>
+            {
+                var list = data.GetAppDayData(app.ID, date);
+                var chartData = new List<ChartsDataModel>();
+                foreach (var item in list)
+                {
+                    chartData.Add(new ChartsDataModel()
+                    {
+                        Name = SelectedAppName,
+                        Icon = app.IconFile,
+                        Values = item.Values,
+                    });
+                }
+                AppHourChartData = chartData;
+            });
+        }
+
+        #endregion
 
         #endregion
 
