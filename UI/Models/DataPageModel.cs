@@ -98,5 +98,35 @@ namespace UI.Models
 
         private ContextMenu AppContextMenu_;
         public ContextMenu AppContextMenu { get { return AppContextMenu_; } set { AppContextMenu_ = value; OnPropertyChanged(); } }
+
+        private List<CalendarDayModel> CalendarDays_;
+        /// <summary>
+        /// 日历单元格数据
+        /// </summary>
+        public List<CalendarDayModel> CalendarDays
+        {
+            get { return CalendarDays_; }
+            set { CalendarDays_ = value; OnPropertyChanged(); }
+        }
+
+        private string CalendarMonthStr_;
+        /// <summary>
+        /// 日历当前月份文本
+        /// </summary>
+        public string CalendarMonthStr
+        {
+            get { return CalendarMonthStr_; }
+            set { CalendarMonthStr_ = value; OnPropertyChanged(); }
+        }
+
+        private CalendarDayModel SelectedCalendarDay_;
+        /// <summary>
+        /// 日历选中日期
+        /// </summary>
+        public CalendarDayModel SelectedCalendarDay
+        {
+            get { return SelectedCalendarDay_; }
+            set { SelectedCalendarDay_ = value; OnPropertyChanged(); }
+        }
     }
 }

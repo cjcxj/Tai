@@ -22,6 +22,9 @@ namespace UI.ViewModels
     public class DataPageVM : DataPageModel
     {
         public Command ToDetailCommand { get; set; }
+        public Command SetCalendarMonthCommand { get; set; }
+        public Command SetCalendarTodayCommand { get; set; }
+
         private readonly IData data;
         private readonly MainViewModel main;
         private readonly IAppContextMenuServicer appContextMenuServicer;
@@ -39,6 +42,8 @@ namespace UI.ViewModels
             _webSiteContextMenu = webSiteContextMenu;
 
             ToDetailCommand = new Command(new Action<object>(OnTodetailCommand));
+            SetCalendarMonthCommand = new Command(new Action<object>(OnSetCalendarMonthCommand));
+            SetCalendarTodayCommand = new Command(new Action<object>(obj => SetCalendarToday()));
 
             Init();
         }
@@ -60,6 +65,8 @@ namespace UI.ViewModels
             };
 
             TabbarSelectedIndex = 0;
+
+            SetCalendarMonth(new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1));
 
             AppContextMenu = appContextMenuServicer.GetContextMenu();
         }
@@ -124,11 +131,31 @@ namespace UI.ViewModels
                     }
                 }
             }
+            else if (e.PropertyName == nameof(SelectedCalendarDay))
+            {
+                var day = SelectedCalendarDay;
+                if (day == null || !day.CanSelect)
+                {
+                    return;
+                }
+                if (CalendarDays != null)
+                {
+                    foreach (var item in CalendarDays)
+                    {
+                        item.IsSelected = ReferenceEquals(item, day);
+                    }
+                }
+                if (TabbarSelectedIndex == 0 && DayDate.Date != day.Date)
+                {
+                    DayDate = day.Date;
+                }
+            }
             else if (e.PropertyName == nameof(ShowType))
             {
                 LoadData(DayDate, 0);
                 LoadData(MonthDate, 1);
                 LoadData(YearDate, 2);
+                LoadCalendarDays();
                 if (ShowType.Id == 0)
                 {
                     AppContextMenu = appContextMenuServicer.GetContextMenu();
@@ -141,6 +168,131 @@ namespace UI.ViewModels
         }
 
 
+
+        #region 日历
+
+        private DateTime calendarMonth;
+
+        /// <summary>
+        /// 切换日历显示月份
+        /// </summary>
+        private void SetCalendarMonth(DateTime month)
+        {
+            calendarMonth = new DateTime(month.Year, month.Month, 1);
+            CalendarMonthStr = calendarMonth.ToString("yyyy年MM月");
+            LoadCalendarDays();
+        }
+
+        private void OnSetCalendarMonthCommand(object obj)
+        {
+            int offset = int.Parse(obj.ToString());
+            var newMonth = calendarMonth.AddMonths(offset);
+            var now = DateTime.Now;
+            if (newMonth > new DateTime(now.Year, now.Month, 1) || newMonth < new DateTime(2020, 1, 1))
+            {
+                return;
+            }
+            SetCalendarMonth(newMonth);
+        }
+
+        private void SetCalendarToday()
+        {
+            var now = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+            if (calendarMonth.Year != now.Year || calendarMonth.Month != now.Month)
+            {
+                SetCalendarMonth(now);
+            }
+            if (TabbarSelectedIndex == 0 && DayDate.Date != now.Date)
+            {
+                DayDate = now;
+            }
+        }
+
+        /// <summary>
+        /// 加载日历月份数据（每日使用总时长）
+        /// </summary>
+        private async void LoadCalendarDays()
+        {
+            var month = calendarMonth;
+            var isApp = ShowType != null && ShowType.Id == 0;
+            List<CalendarDayModel> list = null;
+
+            await Task.Run(() =>
+            {
+                var start = month;
+                var end = month.AddMonths(1).AddDays(-1);
+
+                double[] totals = null;
+                if (isApp)
+                {
+                    totals = data.GetRangeTotalData(start, end);
+                }
+                double max = totals != null && totals.Length > 0 ? totals.Max() : 0;
+
+                int days = DateTime.DaysInMonth(month.Year, month.Month);
+                //周一为首列
+                int prePad = ((int)start.DayOfWeek + 6) % 7;
+                var today = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+
+                list = new List<CalendarDayModel>();
+                for (int i = prePad; i > 0; i--)
+                {
+                    list.Add(new CalendarDayModel()
+                    {
+                        Date = start.AddDays(-i),
+                        IsOtherMonth = true,
+                        CellOpacity = .3,
+                    });
+                }
+
+                for (int i = 0; i < days; i++)
+                {
+                    var date = start.AddDays(i);
+                    int total = totals != null && i < totals.Length ? (int)totals[i] : 0;
+                    var isFuture = date > today;
+
+                    list.Add(new CalendarDayModel()
+                    {
+                        Date = date,
+                        IsToday = date == today,
+                        IsFuture = isFuture,
+                        CellOpacity = isFuture ? .3 : 1,
+                        TimeText = isApp && total > 0 ? FormatDayTime(total) : "",
+                        Heat = isApp && max > 0 && total > 0 ? Math.Min(.85, .15 + total / max * .7) : 0,
+                        ToolTipText = date.ToString("yyyy年MM月dd日") + (isApp ? (total > 0 ? "\r\n使用时长：" + Time.ToString(total) : "\r\n无使用数据") : ""),
+                    });
+                }
+            });
+
+            CalendarDays = list;
+
+            //还原选中日期（换月时保持同号数）
+            var dayNum = DayDate != DateTime.MinValue ? DayDate.Day : DateTime.Now.Day;
+            var selected = list.Where(m => m.CanSelect && m.DayNum == dayNum).FirstOrDefault();
+            if (selected != null)
+            {
+                selected.IsSelected = true;
+            }
+            SelectedCalendarDay = selected;
+        }
+
+        /// <summary>
+        /// 短格式时长
+        /// </summary>
+        private string FormatDayTime(int seconds)
+        {
+            if (seconds >= 3600)
+            {
+                return (seconds / 3600.0).ToString("0.0") + "小时";
+            }
+            if (seconds >= 60)
+            {
+                return (seconds / 60) + "分";
+            }
+            return seconds + "秒";
+        }
+
+        #endregion
 
         #region 读取数据
 

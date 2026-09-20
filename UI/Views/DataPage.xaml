@@ -3,7 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:local="clr-namespace:UI.Views"
+      xmlns:local="clr-namespace:UI.Views" xmlns:base="clr-namespace:UI.Controls.Base"
       xmlns:Charts="clr-namespace:UI.Controls.Charts" xmlns:Tabbar="clr-namespace:UI.Controls.Tabbar" xmlns:DatePickerBar="clr-namespace:UI.Controls.DatePickerBar" xmlns:select="clr-namespace:UI.Controls.Select" x:Class="UI.Views.DataPage"
     xmlns:control="clr-namespace:UI.Controls"
       mc:Ignorable="d" 
@@ -44,16 +44,76 @@
 
             </TabControl.Resources>
             <TabItem>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="*"/>
+                <Grid Margin="0,20,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="*"/>
 
-                    </Grid.RowDefinitions>
-                    <select:DateSelect Date="{Binding DayDate,Mode=TwoWay}"/>
-                    <!--<DatePickerBar:DatePickerBar SelectedDate="{Binding DayDate,Mode=TwoWay}" ShowType="Day"/>-->
+                    </Grid.ColumnDefinitions>
+                    <Border Background="{DynamicResource SettingPanelBgBrush}" CornerRadius="10" Padding="12" Width="300" VerticalAlignment="Top">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="auto"/>
 
-                    <Charts:Charts IsShowBadge="True"  IsSearch="True" Grid.Row="1" ItemMenu="{Binding AppContextMenu}" Data="{Binding Data}" ChartsType="List" Margin="0,20,0,0" ClickCommand="{Binding ToDetailCommand}"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6,0" Command="{Binding SetCalendarMonthCommand}" CommandParameter="-1" ToolTip="上个月">
+                                    <base:Icon IconType="ChevronLeftMed" FontSize="12" Foreground="{DynamicResource SubTextBrush}"/>
+                                </Button>
+                                <TextBlock Grid.Column="1" Text="{Binding CalendarMonthStr}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource DefaultTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Button Grid.Column="2" Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6,0" Command="{Binding SetCalendarMonthCommand}" CommandParameter="1" ToolTip="下个月">
+                                    <base:Icon IconType="ChevronRightMed" FontSize="12" Foreground="{DynamicResource SubTextBrush}"/>
+                                </Button>
+                                <Button Grid.Column="3" Content="今天" FontSize="12" Foreground="{DynamicResource ThemeBrush}" Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6,0" Command="{Binding SetCalendarTodayCommand}"/>
+                            </Grid>
+                            <UniformGrid Columns="7" Margin="0,0,0,4">
+                                <TextBlock Text="一" FontSize="11" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="二" FontSize="11" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="三" FontSize="11" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="四" FontSize="11" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="五" FontSize="11" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="六" FontSize="11" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="日" FontSize="11" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                            </UniformGrid>
+                            <ListBox ItemsSource="{Binding CalendarDays}" SelectedItem="{Binding SelectedCalendarDay,Mode=TwoWay}" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="7"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <ContentPresenter/>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Height="42" Margin="2" ToolTip="{Binding ToolTipText}" Opacity="{Binding CellOpacity}" IsHitTestVisible="{Binding CanSelect}">
+                                            <Border Background="{DynamicResource ThemeBrush}" CornerRadius="6" Opacity="{Binding Heat}"/>
+                                            <Border BorderBrush="{DynamicResource ThemeBrush}" BorderThickness="1.5" CornerRadius="6" Visibility="{Binding SelectedBorderVisibility}"/>
+                                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding DayNum}" FontSize="12" FontWeight="{Binding DayWeight}" Foreground="{DynamicResource DefaultTextBrush}" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding TimeText}" FontSize="9" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Border>
+
+                    <Charts:Charts Grid.Column="1" IsShowBadge="True"  IsSearch="True" ItemMenu="{Binding AppContextMenu}" Data="{Binding Data}" ChartsType="List" Margin="20,0,0,0" ClickCommand="{Binding ToDetailCommand}"/>
                 </Grid>
             </TabItem>
             <TabItem>

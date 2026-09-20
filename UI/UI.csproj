@@ -189,6 +189,7 @@
     <Compile Include="Controls\Window\ToastType.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Librays\Image\Imager.cs" />
+    <Compile Include="Models\CalendarDayModel.cs" />
     <Compile Include="Models\CategoryWebSiteListPageModel.cs" />
     <Compile Include="Models\CategoryAppListPageModel.cs" />
     <Compile Include="Models\CategoryAppList\ChooseAppModel.cs" />
