@@ -72,6 +72,9 @@ namespace UI.Controls.Select
             control.Year = control.Date.Year;
             control.Month = control.Date.Month;
             control.SelectedDay = control.Date.Date;
+            //绑定源变化时同步显示文本与日期列表
+            control.UpdateDays();
+            control.UpdateDateStr();
         }
 
         public int Year
