@@ -1,0 +1,36 @@
+name: build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - uses: nuget/setup-nuget@v2
+        with:
+          nuget-version: latest
+
+      - name: Restore packages
+        run: nuget restore Tai.sln
+
+      - name: Build
+        run: msbuild Tai.sln /p:Configuration=Release /p:Platform="Any CPU" /v:minimal
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tai-release
+          path: |
+            UI/bin/Release/
+            Core/bin/Release/
+            Updater/bin/Release/
+          if-no-files-found: ignore
