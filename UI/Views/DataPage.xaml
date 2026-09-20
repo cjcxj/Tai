@@ -142,12 +142,13 @@
                 </Grid>
             </TabItem>
             <TabItem>
-                <Grid Margin="0,20,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="auto"/>
-                        <ColumnDefinition Width="*"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                    <Grid Margin="0,20,0,0" MinWidth="720" MinHeight="560">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="*"/>
 
-                    </Grid.ColumnDefinitions>
+                        </Grid.ColumnDefinitions>
                     <Border Background="{DynamicResource SettingPanelBgBrush}" CornerRadius="10" Padding="12" Width="300" VerticalAlignment="Top">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,6" ToolTip="点右侧列表选择应用">
@@ -216,7 +217,7 @@
                     <Grid Grid.Column="1" Margin="20,0,0,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="auto"/>
-                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*" MinHeight="260"/>
 
                         </Grid.RowDefinitions>
                         <Border Background="{DynamicResource SettingPanelBgBrush}" CornerRadius="10" Padding="15" Height="240">
@@ -232,7 +233,8 @@
                         </Border>
                         <Charts:Charts Grid.Row="1" IsShowBadge="True" IsSearch="True" ChartsType="List" Data="{Binding MonthAppList}" ClickCommand="{Binding SelectAppCommand}" Margin="0,20,0,0" ToolTip="点击应用，左侧日历显示该应用每日使用时长"/>
                     </Grid>
-                </Grid>
+                    </Grid>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
 
