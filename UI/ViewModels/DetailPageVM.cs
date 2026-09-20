@@ -34,6 +34,7 @@ namespace UI.ViewModels
         public Command BlockActionCommand { get; set; }
         public Command ClearSelectMonthDataCommand { get; set; }
         public Command RefreshCommand { get; set; }
+        public Command SelectMonthDayCommand { get; set; }
         private MenuItem _setCategoryMenuItem;
         private MenuItem _whiteListMenuItem;
         public DetailPageVM(
@@ -56,6 +57,7 @@ namespace UI.ViewModels
             BlockActionCommand = new Command(new Action<object>(OnBlockActionCommand));
             ClearSelectMonthDataCommand = new Command(new Action<object>(OnClearSelectMonthDataCommand));
             RefreshCommand = new Command(new Action<object>(OnRefreshCommand));
+            SelectMonthDayCommand = new Command(new Action<object>(OnSelectMonthDayCommand));
 
             Init();
         }
@@ -430,6 +432,20 @@ namespace UI.ViewModels
             {
                 LoadYearData();
             }
+        }
+
+        /// <summary>
+        /// 点击月度总览日期，切换时长统计为该日24小时图
+        /// </summary>
+        private void OnSelectMonthDayCommand(object obj)
+        {
+            var model = obj as ChartsDataModel;
+            if (model == null || model.DateTime == DateTime.MinValue)
+            {
+                return;
+            }
+            ChartDate = model.DateTime;
+            TabbarSelectedIndex = 0;
         }
 
         /// <summary>

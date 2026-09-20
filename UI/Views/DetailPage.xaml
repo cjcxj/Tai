@@ -203,7 +203,7 @@
                                 <ColumnDefinition Width="9*"/>
 
                             </Grid.ColumnDefinitions>
-                            <Charts:Charts Data="{Binding Data}" ChartsType="Month"  HorizontalAlignment="Left"/>
+                            <Charts:Charts Data="{Binding Data}" ChartsType="Month" ClickCommand="{Binding SelectMonthDayCommand}" ToolTip="点击日期，左侧查看当日24小时使用详情" HorizontalAlignment="Left"/>
                             <StackPanel Grid.Column="1" >
                                 <Border Padding="15" CornerRadius="10" BorderThickness="0">
                                     <Border.Background>
